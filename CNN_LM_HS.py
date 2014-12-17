@@ -25,7 +25,13 @@ from reformat3 import yinwikireformat3
 class CNN_LM(object):
     def __init__(self, learning_rate=0.2, n_epochs=2000, nkerns=[6, 14], batch_size=10, useAllSamples=0, ktop=4, filter_size=[7,5],
                     L2_weight=0.00005, dropout_p=0.8, useEmb=0, task=2, corpus=1, dataMode=3, maxSentLength=600, sentEm_length=48, window=3, 
-                    k=5, nce_seeds=2345, only_left_context=False, vali_cost_list_length=20, context_embedding_size=48, train_scheme=1):
+                    k=5, nce_seeds=2345, only_left_context=False, vali_cost_list_length=20, context_embedding_size=48, train_scheme=1, max_size=10):
+        self.write_file_name_suffix='_nk'+str(nkerns[0])+'&'+str(nkerns[1])+'_bs'+str(batch_size)+'_fs'+str(filter_size[0])+'&'+str(filter_size[1])\
+        +'_maxSL'+str(maxSentLength)+'_window'+str(window)+'_noise'+str(k)+'_wait'+str(vali_cost_list_length)+'_conEm'+str(context_embedding_size)\
+        +'_maxS'+str(max_size)
+        #print self.write_file_name_suffix
+        #exit(0)
+        
         self.ini_learning_rate=learning_rate
         self.n_epochs=n_epochs
         self.nkerns=nkerns
@@ -59,7 +65,8 @@ class CNN_LM(object):
         embeddingPath='/mounts/data/proj/wenpeng/Downloads/hlbl-embeddings-original.EMBEDDING_SIZE=50.txt'
         embeddingPath2='/mounts/data/proj/wenpeng/MC/src/released_embedding.txt'
         '''
-        datasets, unigram, train_lengths, target_lengths, trigram_count, context_matrix, target_matrix, target_id2word, id2trigram=yinwikireformat3(self.maxSentLength, self.window)
+        self.max_size=max_size
+        datasets, unigram, train_lengths, target_lengths, trigram_count, context_matrix, target_matrix, target_id2word, id2trigram=yinwikireformat3(self.maxSentLength, self.window, self.max_size)
         #exit(0)
 
         
@@ -307,9 +314,9 @@ class CNN_LM(object):
         return    T.cast(context_matrix, 'int64'),  T.cast(target_matrix, 'int64')
     def store_model_to_file(self):
         if self.train_scheme ==1:
-            save_file = open('/mounts/data/proj/wenpeng/CNN_LM/model_params_HS', 'wb')  # this will overwrite current contents
+            save_file = open('/mounts/data/proj/wenpeng/CNN_LM/model_params_HS'+self.write_file_name_suffix, 'wb')  # this will overwrite current contents
         elif self.train_scheme ==2 :
-            save_file = open('/mounts/data/proj/wenpeng/CNN_LM/model_params_HS', 'wb')  # this will overwrite current contents
+            save_file = open('/mounts/data/proj/wenpeng/CNN_LM/model_params_HS'+self.write_file_name_suffix, 'wb')  # this will overwrite current contents
         for para in self.best_params:           
             cPickle.dump(para.get_value(borrow=True), save_file, -1)  # the -1 is for HIGHEST_PROTOCOL
         save_file.close()
@@ -322,7 +329,7 @@ class CNN_LM(object):
             print embeddings_R.shape[0], len(self.id2trigram), embeddings_Q.shape[0], len(self.target_id2word)
             exit(0)
         else:
-            context_file=open('/mounts/data/proj/wenpeng/CNN_LM/context_embeddings_HS.txt', 'w')
+            context_file=open('/mounts/data/proj/wenpeng/CNN_LM/context_embeddings_HS'+self.write_file_name_suffix+'.txt', 'w')
             for id in range(len(self.id2trigram)):
                 context_file.write(self.id2trigram[id]+'\t')
                 for j in range(self.context_embedding_size):
@@ -330,7 +337,7 @@ class CNN_LM(object):
                 context_file.write('\n')
             context_file.close()
             print 'context embedding stored over.'
-            target_file=open('/mounts/data/proj/wenpeng/CNN_LM/target_embeddings_HS.txt', 'w')
+            target_file=open('/mounts/data/proj/wenpeng/CNN_LM/target_embeddings_HS'+self.write_file_name_suffix+'.txt', 'w')
             for id in range(len(self.target_id2word)):
                 target_file.write(self.target_id2word[id]+'\t')
                 for j in range(self.target_embedding_size):
@@ -718,8 +725,8 @@ def minimal_of_list(list_of_ele):
 
 if __name__ == '__main__':
     
-    network=CNN_LM(learning_rate=0.001, n_epochs=2000, nkerns=[6, 14], batch_size=70, useAllSamples=0, ktop=4, filter_size=[7,5],
+    network=CNN_LM(learning_rate=0.001, n_epochs=2000, nkerns=[6, 14], batch_size=50, useAllSamples=0, ktop=4, filter_size=[7,5],
                     L2_weight=0.00005, dropout_p=0.8, useEmb=0, task=2, corpus=0, dataMode=2, maxSentLength=250, sentEm_length=200, window=10, 
-                    k=10, nce_seeds=2345, only_left_context=False, vali_cost_list_length=20, context_embedding_size=200, train_scheme=1)
+                    k=10, nce_seeds=2345, only_left_context=False, vali_cost_list_length=20, context_embedding_size=50, train_scheme=1, max_size=1000000)
     network.evaluate_lenet5()
 

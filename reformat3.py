@@ -76,7 +76,7 @@ class wikiline:
          done.add(mywords[i])
          self.alltrainex.append(trainex(mywords,i,self.sent,i2w))
 
-def yinwikireformat3(maxlength, window_size):
+def yinwikireformat3(maxlength, window_size, max_size):
     #defined by wenpeng
     trigram2id={}
     id2trigram={}
@@ -113,8 +113,8 @@ def yinwikireformat3(maxlength, window_size):
         if input_length>maxlength or input_length<20:
             continue
         else: # a valid sentence
-            #if count==10000:
-            #    break
+            if count==max_size:
+                break
             count+=1
             sent=[]
             contexts=[]
